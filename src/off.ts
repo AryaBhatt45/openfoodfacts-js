@@ -109,6 +109,7 @@ export class OpenFoodFacts {
   private readonly fetch: FetchFn;
   private readonly baseUrl: string;
   private readonly backendType?: BackendType;
+   private readonly effectiveBackend: BackendType; 
   private readonly customUserAgent: string;
   private accessToken?: string;
   private readonly defaultOptions: {
@@ -134,13 +135,17 @@ export class OpenFoodFacts {
    * @param fetch - Fetch implementation to use
    * @param options - Options for the OFF Object
    */
-  constructor(
+ constructor(
     fetch: FetchFn,
     options: OpenFoodFactsOptions = { country: "world", language: "en" },
   ) {
     this.validateOptions(options);
     this.backendType = options.type;
     this.baseUrl = this.createBaseUrl(options);
+    this.effectiveBackend =
+      options.type ??
+      (options.host ? this.inferBackendFromHost(options.host) : BackendType.OFF);
+
     this.customUserAgent = this.createUserAgent();
     this.accessToken = options.accessToken;
     this.fetch = this.createFetchWrapper(fetch, options);
@@ -170,19 +175,25 @@ export class OpenFoodFacts {
       );
     }
   }
-
-  /**
+/**
    * Validates if the current method is supported by the selected backend flavor.
    */
   private validateFlavorSupport(supportedFlavors: BackendType[], methodName: string): void {
-    const currentFlavor = this.backendType || BackendType.OFF;
-    if (!supportedFlavors.includes(currentFlavor)) {
+    if (!supportedFlavors.includes(this.effectiveBackend)) {
       throw new Error(
-        `Method '${methodName}' is not supported by the ${BACKEND_NAMES[currentFlavor]} backend.`
+        `Method '${methodName}' is not supported by the ${BACKEND_NAMES[this.effectiveBackend]} backend.`
       );
     }
   }
-
+/**
+   * Infers the backend type from a custom host URL if provided
+   */
+  private inferBackendFromHost(host: string): BackendType {
+    if (host.includes("openbeautyfacts")) return BackendType.OBF;
+    if (host.includes("openpetfoodfacts")) return BackendType.OPFF;
+    if (host.includes("openproductsfacts")) return BackendType.OPF;
+    return BackendType.OFF;
+  }
   /**
    * Creates the base URL based on options
    */
