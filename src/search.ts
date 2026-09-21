@@ -1,6 +1,11 @@
 import type { paths } from "./schemas/search.js";
-import createClient from "openapi-fetch";
+import openapiFetchCreateClient from "openapi-fetch";
+import { unwrapCjsDefault } from "./interop-workaround.js";
 import { USER_AGENT } from "./consts.js";
+import type { FetchFn } from "./types.js";
+
+// https://github.com/rolldown/tsdown/issues/1054
+const createClient = unwrapCjsDefault(openapiFetchCreateClient);
 
 const SEARCH_BASE_URL = "https://search.openfoodfacts.org";
 
@@ -38,7 +43,7 @@ export class SearchApi {
   private readonly client: ReturnType<typeof createClient<paths>>;
 
   constructor(
-    fetch: typeof globalThis.fetch,
+    fetch: FetchFn,
     options: { baseUrl: string } = { baseUrl: SEARCH_BASE_URL },
   ) {
     this.client = createClient<paths>({
