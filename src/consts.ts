@@ -41,7 +41,6 @@ export const DEFAULT_NUTRIPATROL_API_URL =
 
 /**
  * Dynamic Helper to get the API Host based on the flavor (OFF, OBF, etc.)
- * Part of Issue #518: Add support for multi-flavor facts
  */
 export const getProductApiHost = (backend: BackendType = BackendType.OFF): string => {
   return `https://world.${BACKEND_DOMAINS[backend]}`;
